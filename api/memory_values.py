@@ -95,30 +95,34 @@ class hitTrajectoryX(enum.Enum):
     push    = 2
 
 @enum.unique
-class hitTrajectoryHeight(enum.Enum):
+class hitTrajectoryY(enum.Enum):
     mid     = 0
     high    = 1
     low     = 2
 
 @enum.unique
-class FieldingAbilities(enum.Enum):
+class FieldingAbility1(enum.Enum):
     # 2^k for actual value 
-    tongue      = 0
-    suction     = 1
-    supercatch  = 2
-    balldash    = 3
-    bodycheck   = 4
-    curve       = 5
+    nothing     = 0
+    tongue      = 1
+    suction     = 2
+    supercatch  = 4
+    balldash    = 8
+    bodycheck   = 16
+    curve       = 32
 
-    # 2^k + 2^(6+j)
-    wallsplat       = 6
-    walljump        = 7
-    clamber         = 8
-    slidingcatch    = 9
-    laser           = 10
-    quickthrow      = 11
-    superjump       = 12
-    magiccatch      = 13
+@enum.unique
+class FieldingAbility2(enum.Enum):
+
+    nothing         = 0
+    wallsplat       = 1
+    walljump        = 2
+    clamber         = 4
+    slidingcatch    = 8
+    laser           = 16
+    quickthrow      = 32
+    superjump       = 64
+    magiccatch      = 128
 
 
 @enum.unique
