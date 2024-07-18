@@ -64,7 +64,7 @@ class FieldingArm(enum.Enum):
     left    = 1
 
 @enum.unique
-class BattingStance(enum.Enum):
+class BattingHand(enum.Enum):
     right   = 0
     left    = 1
 
@@ -84,18 +84,18 @@ class WeightType(enum.Enum):
     heavyweight     = 4
 
 @enum.unique
-class IsCapitan(enum.Enum):
+class IsCaptain(enum.Enum):
     no  = 0
     yes = 1
 
 @enum.unique
-class hitTrajectoryX(enum.Enum):
+class hitTrajectoryHorizontal(enum.Enum):
     mid     = 0
     pull    = 1
     push    = 2
 
 @enum.unique
-class hitTrajectoryY(enum.Enum):
+class hitTrajectoryVertical(enum.Enum):
     mid     = 0
     high    = 1
     low     = 2
@@ -126,7 +126,7 @@ class FieldingAbility2(enum.Enum):
 
 
 @enum.unique
-class CapitanStarAbility(enum.Enum):
+class CaptainStarAbility(enum.Enum):
     nothing         = 0
     mfireball       = 1 # idk they call it "fireball" in his Mario's bio
     lfireball       = 2 # vs "green fireball" in Luigi's bio
@@ -253,7 +253,7 @@ class AddressLocation():
         PitcherCurrentCurve = 0x80890A24    #float
 
         BatterID = 0x80890973
-        BatterHandedness = 0x8089098b
+        BatterHand = 0x8089098b
 
 
         BatterPositionX = 0x80890910    #float
