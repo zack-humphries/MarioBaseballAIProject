@@ -2,6 +2,7 @@ import memory_values
 from memory_values import *
 import csv
 import os
+import math
 
 
 class AllCharacters:
@@ -50,44 +51,90 @@ def returnFilePath(filename):
     filepath = os.path.join(scriptdir, filename)
     return filepath
 
+def convertValueTypeString(str):
+    if str == '':
+        return None
+    else:
+        return eval(str)
+    
+def findClosestPow2(num):
+    closestlog2 = math.floor(math.log2(num))
+
+    return (2**closestlog2)
+    
+    
+def checkAndConvertIfPow2Type(temptype, tempvalue):
+    pow2Types = [FieldingAbility1, FieldingAbility2]
+
+    templist = []
+
+    if (temptype in pow2Types) and (tempvalue != 0):
+        while tempvalue != 0:
+            temppow2 = findClosestPow2(tempvalue)
+            templist.append(temppow2)
+            tempvalue = tempvalue - temppow2
+        for index in range(len(templist)):
+            templist[index] = temptype(templist[index])
+        return templist
+    elif (temptype in pow2Types) and (tempvalue == 0):
+        return [temptype(tempvalue)]
+    
+    return temptype(tempvalue)
+
+    
+
+
+
+def appendCharacterData(allcharacters : AllCharacters, csvreader):
+    # returns stat's names, data types, and actual data
+    fields = list(next(csvreader))
+    datatypes = list(next(csvreader))
+    data = list(csvreader)
+
+    # loops through all characters IDs in memory_values and inputs their stats
+    for characterid in memory_values.CharacterID:
+
+        #pulls row data corresponding with character_id
+        datarow = data[characterid.value]
+
+        #creates new character object for that specific character
+        currcharacter = Character(characterid.value, characterid.name)
+
+        #creates character stats object for that character
+        characterstats = CharacterStats()
+
+        # for loop ignores char_id and trailing column ''
+        for statindex in range(1, len(fields)-1):
+
+            # converts string to enum class name in memory_values.py
+            temptype = convertValueTypeString(datatypes[statindex])
+
+            tempvalue = int(datarow[statindex])
+            tempvalue = checkAndConvertIfPow2Type(temptype, tempvalue)
+
+            characterstats.add_stat(Stat(fields[statindex], tempvalue, type=temptype))
+
+
+        currcharacter.stats = characterstats.stats
+
+        allcharacters.add_character(currcharacter)
+
+
     
 def initializeCharacters():
 
+    # initialize all characters class
     allcharacters = AllCharacters()
 
+    # return current filepath (which should contain character_stats.csv)
     filepath = returnFilePath("character_stats.csv")
 
     with open(filepath, 'r') as csvfile:
 
         csvreader = csv.reader(csvfile)
 
-        fields = list(next(csvreader))
-        datatype = list(next(csvreader))
-        data = list(csvreader)
-
-        print(fields)
-
-        for characterid in memory_values.CharacterID:
-
-            datarow = data[characterid.value]
-
-            currcharacter = Character(characterid.value, characterid.name)
-
-            characterstats = CharacterStats()
-
-            count = 0
-            for statindex in range(1, len(fields)-1):
-
-                if datatype[statindex] != '':
-                    temptype = eval(datatype[statindex])
-                    tempvalue = temptype(int(datarow[statindex]))
-                    characterstats.add_stat(Stat(fields[statindex], tempvalue, type=temptype))
-                count += 1
-
-            currcharacter.stats = characterstats.stats
-
-            allcharacters.add_character(currcharacter)
-
+        appendCharacterData(allcharacters, csvreader)
+        
     return allcharacters
 
         
@@ -95,12 +142,12 @@ def main():
     all_characters = initializeCharacters()
 
     for character in all_characters.list:
-        print(str(character.id) + " " + str(character.name))
+        print("ID: " + str(character.id) + " " + str(character.name))
 
         for stat in character.stats:
             print(stat.name + ": " + str(stat.value) + " <- " + str(stat.type))
 
-        return
+        print()
 
     
 if __name__ == '__main__':
