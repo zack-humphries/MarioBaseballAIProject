@@ -69,6 +69,7 @@ class Dolphin():
         self.memory = memory
         return pid
     ## no memory found
+    print("ERROR")
     return None
 
   # virtual methods
@@ -220,3 +221,16 @@ class Dolphin():
     try: return SharedMemory('dolphin-emu.'+str(pid))
     except FileNotFoundError: return None
   find_dolphin = find_dolphin
+
+
+def main():
+  dolphin = Dolphin()
+
+  while True:
+    if dolphin.hook():
+      print(str(dolphin.read_int8(0x803c77b8)) + "   " + str(dolphin.read_int8(0x803c77b9)))
+    else:
+      break
+
+if __name__ == '__main__':
+  main()
