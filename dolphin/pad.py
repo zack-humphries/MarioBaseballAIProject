@@ -26,7 +26,8 @@ class Trigger(enum.Enum):
 
     #LR = 6
 
-class Stick():
+@enum.unique
+class Stick(enum.Enum):
     NONE = 0
     LEFT = 1
     RIGHT = 2

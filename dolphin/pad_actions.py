@@ -14,8 +14,7 @@ class PadBasicActions(Dolphin):
 
     def applyInputs(self):
 
-        print(str(self.player.buttonAddress) + " " + str(self.buttons))
-        print(str(self.player.stickAddress) + " " + str(self.sticktrigger))
+        print(str(self.player.buttonAddress) + " " + str(self.buttons) + "     " + str(self.player.stickAddress) + " " + str(self.sticktrigger))
 
         self.dolphin.write_int8(self.player.buttonAddress, self.buttons)
         self.dolphin.write_int8(self.player.stickAddress, self.sticktrigger)
@@ -234,6 +233,7 @@ class PadBasicActions(Dolphin):
         self.releaseStick()
 
 
+
     def return_to_main_menu(self):
         self.releaseAllInputs()
         self.input(Start.START)
@@ -258,10 +258,10 @@ class PadBasicActions(Dolphin):
 
 def main():
     dolphin = Dolphin()
-    player2 = Player2()
+    player1 = Player1()
+    actions = PadBasicActions(dolphin, player1)
     if dolphin.hook():
-        print(dolphin.read_int8(player2.buttonAddress))
-        actions = PadBasicActions(dolphin, player2)
+        print(dolphin.read_int8(player1.buttonAddress))
         actions.return_to_main_menu()
     else:
         print("ERROR")
