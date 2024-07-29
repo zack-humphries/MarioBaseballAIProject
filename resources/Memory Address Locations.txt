@@ -1,0 +1,37 @@
+Memory Address Locations
+
+General
+0x808928a7 - 2 - Away Score
+0x808928a5 - 2 - Away Score for Display
+0x808928cd - 2 - Home Score
+0x808928cb - 2 - Home Score for Display
+0x8089296b - 2 - Number of Strikes
+0x8089296f - 2 - Number of Balls
+0x80892973 - 2 - Number of Outs
+0x80892734 - 4 - Runners on Base Info - 1 if on base, 0 if not. Goes by [3rd 2nd 1st home] (ex 1011: runners on 3rd and 1st with a batter up)
+0x80892ad6 - 2 - Home Number of Stars
+0x80892ad7 - 2 - Away Number of Stars
+0x800e8705 - 2 - Stadium ID (0:Mario Stadium, 1:Peach Garden, 2:Wario Palace, 3:Yoshi Park, 4:DKJungle, 5:BowserStadium, 6: ToyField)
+
+Player 1
+0x803c77b8 - 2 - P1 key button input - [(1:A, 2:B, 4:X, 8:Y)]
+0x803c77b9 - 2 - P1 button/stick input- [(1:z, 2:R, 4:L) (1:left, 2:right, 4:down, 8:up, add directions together for combination of 2)]
+
+Player 2
+0x803c77d8 - 2 - P2 key button input - [(1:A, 2:B, 4:X, 8:Y)]
+0x803c77b9 - 2 - P2 button/stick input- [(1:z, 2:R, 4:L) (1:left, 2:right, 4:down, 8:up, add directions together for combination of 2)]
+
+Pitcher
+0x80890adb - 2 - pitcher id
+0x80890b01 - 2 - pitcher handiness (0:right-handed, 1:left-handed)
+0x80890A4C - 4 (float) - Pitcher Mound Position X - Value ranges between (and including) -0.4 and 0.4
+0x80890a24 - 4 (float) - Pitcher curve value (after calculations)
+
+Hitter
+0x80890973 - 2 - batter id
+0x8089098b - 2 - batter handiness (0:right-handed, 1:left-handed)
+0x80890910 - 4 (float) - Batter position X 
+0x80890914 - 4 (float) - Batter position Y
+
+
+
