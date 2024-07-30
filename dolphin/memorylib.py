@@ -199,6 +199,25 @@ class Dolphin():
   def read_int16(self, addr): return self.read_struct(addr, '>h')[0]
   def read_int8(self, addr): return self.read_struct(addr, '>b')[0]
   def read_float(self, addr): return self.read_struct(addr, '>f')[0]
+
+
+  def read(self, addr, type: str):
+    if type == 'int8':
+      return self.read_struct(addr, '>b')[0]
+    elif type == 'uint8':
+      return self.read_struct(addr, '>B')[0]
+    elif type == 'float':
+      return self.read_struct(addr, '>f')[0]
+    elif type == 'int16':
+      return self.read_struct(addr, '>h')[0]
+    elif type == 'uint16':
+      return self.read_struct(addr, '>H')[0]
+    elif type == 'int32':
+      return self.read_struct(addr, '>i')[0]
+    elif type == 'uint32':
+      return self.read_struct(addr, '>I')[0]
+    return AttributeError
+
   ## write single value to memory
   '''
     @params {Addr} addr
@@ -215,6 +234,24 @@ class Dolphin():
   def write_int16(self, addr, val): return self.write_struct(addr, '>h', val)
   def write_int8(self, addr, val): return self.write_struct(addr, '>b', val)
   def write_float(self, addr, val): return self.write_struct(addr, '>f', val)
+
+  def write(self, addr, type: str, val):
+    if type == 'int8':
+      return self.write_struct(addr, '>b', val)[0]
+    elif type == 'uint8':
+      return self.write_struct(addr, '>B', val)[0]
+    elif type == 'float':
+      return self.write_struct(addr, '>f', val)[0]
+    elif type == 'int16':
+      return self.write_struct(addr, '>h', val)[0]
+    elif type == 'uint16':
+      return self.write_struct(addr, '>H', val)[0]
+    elif type == 'int32':
+      return self.write_struct(addr, '>i', val)[0]
+    elif type == 'uint32':
+      return self.write_struct(addr, '>I', val)[0]
+    return AttributeError
+
 
   # static methods
   def init_shared_memory(pid):
