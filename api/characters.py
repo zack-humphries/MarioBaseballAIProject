@@ -7,34 +7,44 @@ import math
 
 class AllCharacters:
     def __init__(self):
-        self.list = []
+        self.allCharacters = {}
 
     def add_character(self, character):
-        self.list.append(character)
+        self.allCharacters[character.name] = character
+
 
 
 class Character:
     def __init__(self, id, name):
         self.id = id
         self.name = name
-        self.stats = None
-        self.attributes = None
+        self.stats = {}
+        self.attributes = {}
 
 
 class CharacterStats(Character):
     def __init__(self):
-        self.stats = []
+        self.stats = {}
 
     def add_stat(self, stat):
-        self.stats.append(stat)
+        self.stats[stat.stat["name"]] = stat
 
     def change_stat(self, name, value, *args):
-        for stat in self.stats:
-            if stat.name == name:
-                stat.value = value
+        self.stats[name] = value
+
 
 class Stat(CharacterStats):
     def __init__(self, name, value, address = None, type = None, class_type = None):
+        self.stat =  {
+            'name' : name,
+            'value' : value,
+            'type' : type,
+            'address': address,
+            'class_type' : class_type
+        }
+
+        setattr(self, name, self.stat)
+
         self.name = name
         self.type = type
         self.address = address
@@ -42,10 +52,6 @@ class Stat(CharacterStats):
         self.class_type = class_type
 
 
-    #def get_value??
-
-    #def turn pow2 to list?
-        
 def returnFilePath(filename):
     scriptdir = os.path.dirname(os.path.abspath(__file__))
     filepath = os.path.join(scriptdir, filename)
@@ -61,27 +67,30 @@ def findClosestPow2(num):
     closestlog2 = math.floor(math.log2(num))
 
     return (2**closestlog2)
-    
-    
+
 def checkAndConvertIfPow2Type(temptype, tempvalue):
     pow2Types = [FieldingAbility1, FieldingAbility2]
 
     templist = []
-
+    # takes value and separates into indvidual pow2 values if part of FieldingAbility1 or FieldingAbility2
     if (temptype in pow2Types) and (tempvalue != 0):
+    
+        # ex: 19 -> [16, 2, 1] 
         while tempvalue != 0:
             temppow2 = findClosestPow2(tempvalue)
             templist.append(temppow2)
             tempvalue = tempvalue - temppow2
+
+        # [16, 2, 1] -> [enumtype(16), enumtype(2), enumtype(1)]    
         for index in range(len(templist)):
             templist[index] = temptype(templist[index])
         return templist
+    
+    #if value is zero, return [enumtype(0)]
     elif (temptype in pow2Types) and (tempvalue == 0):
         return [temptype(tempvalue)]
     
     return temptype(tempvalue)
-
-    
 
 
 
@@ -92,13 +101,13 @@ def appendCharacterData(allcharacters : AllCharacters, csvreader):
     data = list(csvreader)
 
     # loops through all characters IDs in memory_values and inputs their stats
-    for characterid in memory_values.CharacterID:
+    for character in memory_values.CharacterID:
 
         #pulls row data corresponding with character_id
-        datarow = data[characterid.value]
+        datarow = data[character.value]
 
         #creates new character object for that specific character
-        currcharacter = Character(characterid.value, characterid.name)
+        currcharacter = Character(character.value, character.name)
 
         #creates character stats object for that character
         characterstats = CharacterStats()
@@ -114,13 +123,13 @@ def appendCharacterData(allcharacters : AllCharacters, csvreader):
 
             characterstats.add_stat(Stat(fields[statindex], tempvalue, type=temptype))
 
+        # print(characterstats.stats['fielding_arm'].value.value)
 
         currcharacter.stats = characterstats.stats
 
         allcharacters.add_character(currcharacter)
 
 
-    
 def initializeCharacters():
 
     # initialize all characters class
@@ -135,63 +144,14 @@ def initializeCharacters():
 
         appendCharacterData(allcharacters, csvreader)
         
-    return allcharacters
+    return allcharacters.allCharacters
 
         
 def main():
     all_characters = initializeCharacters()
 
-    for character in all_characters.list:
-        print("ID: " + str(character.id) + " " + str(character.name))
-
-        for stat in character.stats:
-            print(stat.name + ": " + str(stat.value) + " <- " + str(stat.type))
-
-        print()
-
+    print(all_characters['Mario'].stats['fielding_arm'].value)
+    
     
 if __name__ == '__main__':
     main()
-
-#    stat_list = [
-#         "fielding_arm",
-#         "batting_stance",
-#         "character_class",
-#         "weight_class",
-#         "is_captain",
-#         "curve_ball_speed",
-#         "fast_ball_speed",
-#         "cursed_ball",
-#         "curve",
-#         "curve_control",
-#         "fielding_ability1",
-#         "fielding_ability2",
-#         "slap_contact_mult",
-#         "charge_contact_mult",
-#         "slap_power",
-#         "charge_power",
-#         "bunting",
-#         "hit_trajectory_X",
-#         "hit_trajectory_Y",
-#         "speed",
-#         "throwing_arm",
-#         "captain_stars",
-#         "star_swing",
-#         "star_pitch",
-#         "chemestry"
-#     ]
-# class Chemestry(CharacterStats):
-#     def __init__(self):
-        
-
-# class Stat:
-#     def __init__(self, name, value, *args, **kwargs):
-#         self.name = name
-
-#         self.type = kwargs.get('type', None)
-#         if self.type is not None:
-#             assert value in self.type
-#             self.value = value
-#         else:
-#             self.value = value
-

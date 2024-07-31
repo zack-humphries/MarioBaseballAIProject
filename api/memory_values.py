@@ -64,9 +64,24 @@ class FieldingArm(enum.Enum):
     left    = 1
 
 @enum.unique
+class PitchingHand(enum.Enum):
+    right   = 0
+    left    = 1
+
+@enum.unique
 class BattingHand(enum.Enum):
     right   = 0
     left    = 1
+
+@enum.unique
+class Hand(enum.Enum):
+    right   = 0
+    left    = 1
+
+@enum.unique
+class YesNo(enum.Enum):
+    no      = 0
+    yes     = 1
 
 @enum.unique
 class CharacterClass(enum.Enum):

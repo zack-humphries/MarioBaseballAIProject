@@ -1,5 +1,5 @@
 ﻿char_id,fielding_arm,batting_hand,character_class,weight,captain,curve_ball_speed,fast_ball_speed,cursed_ball,curve,curve_control,fielding_ability1,fielding_ability2,slap_contact_mult,charge_contact_mult,slap_power,charge_power,bunting,hit_trajectory_horizontal,hit_trajectory_vertical,speed,throwing_arm,captain_stars,star_swing,star_pitch
-CharacterID,FieldingArm,BattingHand,CharacterClass,WeightType,IsCaptain,int,int,int,int,int,FieldingAbility1,FieldingAbility2,int,int,int,int,int,hitTrajectoryHorizontal,hitTrajectoryVertical,int,int,CaptainStarAbility,StarSwing,StarPitch
+CharacterID,Hand,Hand,CharacterClass,WeightType,YesNo,int,int,int,int,int,FieldingAbility1,FieldingAbility2,int,int,int,int,int,hitTrajectoryHorizontal,hitTrajectoryVertical,int,int,CaptainStarAbility,StarSwing,StarPitch
 0,0,0,0,2,1,130,168,60,53,50,0,10,65,35,50,64,35,0,0,50,60,1,1,2
 1,0,1,0,2,1,125,165,55,56,50,0,66,70,40,48,59,40,0,0,60,50,2,2,2
 2,0,1,1,4,1,130,165,70,35,50,0,20,30,15,60,80,20,1,1,40,70,5,1,1
