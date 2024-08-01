@@ -237,19 +237,19 @@ class Dolphin():
 
   def write(self, addr, type: str, val):
     if type == 'int8':
-      return self.write_struct(addr, '>b', val)[0]
+      return self.write_struct(addr, '>b', val)
     elif type == 'uint8':
-      return self.write_struct(addr, '>B', val)[0]
+      return self.write_struct(addr, '>B', val)
     elif type == 'float':
-      return self.write_struct(addr, '>f', val)[0]
+      return self.write_struct(addr, '>f', val)
     elif type == 'int16':
-      return self.write_struct(addr, '>h', val)[0]
+      return self.write_struct(addr, '>h', val)
     elif type == 'uint16':
-      return self.write_struct(addr, '>H', val)[0]
+      return self.write_struct(addr, '>H', val)
     elif type == 'int32':
-      return self.write_struct(addr, '>i', val)[0]
+      return self.write_struct(addr, '>i', val)
     elif type == 'uint32':
-      return self.write_struct(addr, '>I', val)[0]
+      return self.write_struct(addr, '>I', val)
     return AttributeError
 
 
