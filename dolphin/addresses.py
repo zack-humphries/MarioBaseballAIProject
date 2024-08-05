@@ -7,13 +7,14 @@ import time
 
 dolphin = Dolphin()
 
+# checks if variable is None or empty string
 def isNoneOrEmpty(var):
     if var == '' or var == None:
         return True
     return False
 
-class MemoryAddress():  
 
+class MemoryAddress():  
     def __init__(self, name, address, type: str, classtype = None, notes = None):
         if type not in ['int6', 'uint8', 'float', 'int16', 'uint16', 'int32', 'uint32']:
             AssertionError
@@ -22,6 +23,7 @@ class MemoryAddress():
         self.address = address
         self.type = type
 
+        # assert classtype if member of enum class in memory_values.py
         if isNoneOrEmpty(classtype):
             self.classtype = None
         else:
@@ -29,18 +31,21 @@ class MemoryAddress():
 
         self.notes = notes
 
+    # reads specific memory address on given frame
     def read(self):
         if dolphin.hook():
             return dolphin.read(self.address, self.type)
         else:
             return Exception
-    
+        
+    # overwrites value onto address on given frame
     def write(self, value):
         if dolphin.hook():
             return dolphin.write(self.address, self.type, value)
         else:
             return Exception
 
+    # returns memoryAddress info in a dict format
     def get_dict(self):
         tempValue = self.read()
 
@@ -49,7 +54,6 @@ class MemoryAddress():
         else:
             tempEnumValue = self.classtype(tempValue)
         
-
         returnDict = {
             'name' : self.name,
             'address' : self.address,
@@ -71,6 +75,7 @@ def convertValueTypeString(str):
     else:
         return eval(str)
 
+# modify "addresses.csv" to add any addresses you want
 def appendMemoryAddresses(csvreader):
 
     memoryAddresses = {}
@@ -78,6 +83,8 @@ def appendMemoryAddresses(csvreader):
     fields = list(next(csvreader))
     data = list(next(csvreader))
 
+    # loops through csv data and appends info to memoryAddresses
+    # not super well written with try & except's
     while data is not None:
         if data[0] == '':
             try:
@@ -116,30 +123,21 @@ def main():
 
     memoryAddresses = initializeMemoryAddresses()
 
-    print(memoryAddresses["desired_mound_position_x"].read())
-    memoryAddresses["desired_mound_position_x"].write(-0.2)
-    print(memoryAddresses["desired_mound_position_x"].read())
+    # prints all keys
+    for key in memoryAddresses.keys(): print(key)
 
-    #for i in range(100):
-        
-        # time.sleep(0.5)
-        # memoryAddresses["score_display_away"].write(5)
-        # print(memoryAddresses["score_display_away"].read())
-        # time.sleep(0.5)
+    # example for changing away score
+    print(memoryAddresses["score_away"].read())
+    memoryAddresses["score_away"].write(20)
+    memoryAddresses["score_display_away"].write(20)
+    print(memoryAddresses["score_away"].read())
 
+    memoryAddresses["desired_mound_position_x"].write(0.2)
 
-    #print("--- %s actions per frame ---" % str(1/((time.time() - start)/100 * 60)))
+    # example for reading p1 stick & trigger inputs
+    for i in range(50):
+        print(memoryAddresses["p1_stick_trigger_input"].read())
 
-    # dolphin = Dolphin()
-
-    # hand = MemoryAddress('away_score', int('0x808928a7', 16), 'int8')
-
-
-
-    # if dolphin.hook():
-    #     print(dolphin.read(hand.address, hand.type)) # reading doesn't work but writing does?
-    #     print(dolphin.read_int8(hand.address))
-    #     #numberOfStrikes.write(1)
 
 
 if __name__ == '__main__':
