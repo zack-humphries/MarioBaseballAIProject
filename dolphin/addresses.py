@@ -1,8 +1,8 @@
-from memorylib import Dolphin
 import memorylib
+from memorylib import Dolphin
 import os
 import csv
-from api.memory_values import *
+from memory_values import *
 import time
 
 dolphin = Dolphin()
