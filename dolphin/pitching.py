@@ -3,6 +3,12 @@ from addresses import initializeMemoryAddresses
 from characters import initializeCharacters
 import memory_values
 #from pitching_calculations import pitchBaseReleaseCoordinates
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import numpy as np
+
 
 dolphin = Dolphin()
 
@@ -50,6 +56,7 @@ pitchBaseReleaseCoordinates = {
     'Goomba':      {'curve': {'X': -0.294719875,    'Z': 1.01028323,    'Y': 17.451561},        'charge': {'X': -0.729693174,   'Z': 0.665731907,   'Y': 18.527298}},
     'Paragoomba':  {'curve': {'X': -0.795248866,    'Z': 2.18529749,    'Y': 18.4609985},       'charge': {'X': -0.7055155504,  'Z': 3.25615358,    'Y': 18.637495}},
     'KoopaG':      {'curve': {'X': -0.0643017143,   'Z': 1.38116789,    'Y': 18.2691517},       'charge': {'X': -0.0115943998,  'Z': 1.42475438,    'Y': 18.2572403}},
+    'ParatroopaR': {'curve': {'X': -0.0549990535,   'Z': 2.26200676,    'Y': 18.3726215},       'charge': {'X': 0.0554796606,   'Z': 2.54858708,    'Y': 18.4819603}},
     'ShyGuyB':     {'curve': {'X': -0.525757074,    'Z': 4.07900000,    'Y': 18.8315792},       'charge': {'X': -0.491243154,   'Z': 3.79274869,    'Y': 18.9465904}},
     'ShyGuyY':     {'curve': {'X': -0.525757074,    'Z': 4.07900000,    'Y': 18.8315792},       'charge': {'X': -0.491243154,   'Z': 3.79274869,    'Y': 18.9465904}},
     'ShyGuyG':     {'curve': {'X': -0.525757074,    'Z': 4.07900000,    'Y': 18.8315792},       'charge': {'X': -0.491243154,   'Z': 3.79274869,    'Y': 18.9465904}},
@@ -64,6 +71,62 @@ pitchBaseReleaseCoordinates = {
 
 pitchAirResistance = {'curve': {'velocityAdjustment': 15, 'delay': 20}}
 
+batterHitbox = {
+                'Mario':       {'HitboxMultiplier': [1.18, 1.1], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.0999999046325684, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'Luigi':       {'HitboxMultiplier': [1.18, 1.1], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': 0.30000001192092896, 'VerticalRangeBack': 1.899999976158142, 'EasyBattingSpotHorizontal': -1.7999999523162842, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 },
+                'DK':          {'HitboxMultiplier': [1.11, 1.0], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': 0.4000000059604645, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.6500000953674316, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 1.0 }, 
+                'Diddy':       {'HitboxMultiplier': [1.18, 1.15], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.30000001192092896, 'VerticalRangeBack': 1.7999999523162842, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'Peach':       {'HitboxMultiplier': [1.18, 1.08], 'HorizontalRangeNear': -0.75,                 'HorizontalRangeFar': 0.5,                  'VerticalRangeFront': 0.10000000149011612, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -1.899999976158142, 'EasyBattingSpotVertical': -1.2999999523162842, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'Daisy':       {'HitboxMultiplier': [1.18, 1.1], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6000000238418579,   'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.600000023841858, 'EasyBattingSpotHorizontal': -2.0, 'EasyBattingSpotVertical': -1.2999999523162842, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'Yoshi':       {'HitboxMultiplier': [1.18, 1.1], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': 0.20000000298023224, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.049999952316284, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'BabyMario':   {'HitboxMultiplier': [1.2, 1.1], 'HorizontalRangeNear': -0.75,                 'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.7000000476837158, 'EasyBattingSpotHorizontal': -1.7999999523162842, 'EasyBattingSpotVertical': -1.2999999523162842, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'BabyLuigi':   {'HitboxMultiplier': [1.2, 1.18], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.7999999523162842, 'EasyBattingSpotHorizontal': -1.899999976158142, 'EasyBattingSpotVertical': -1.149999976158142, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'Bowser':      {'HitboxMultiplier': [1.0, 0.8], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 1.4500000476837158,   'VerticalRangeFront': 0.10000000149011612, 'VerticalRangeBack': 0.20000000298023224, 'EasyBattingSpotHorizontal': -3.5999999046325684, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'Wario':       {'HitboxMultiplier': [1.18, 1.06], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.75,                 'VerticalRangeFront': 0.4000000059604645, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.4000000953674316, 'EasyBattingSpotVertical': -1.600000023841858, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 },
+                'Waluigi':     {'HitboxMultiplier': [1.0, 0.8], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.8500000238418579,   'VerticalRangeFront': 0.30000001192092896, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.299999952316284, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'KoopaR':      {'HitboxMultiplier': [1.18, 1.1], 'HorizontalRangeNear': -0.5,                  'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.600000023841858, 'EasyBattingSpotHorizontal': -2.1500000953674316, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'ToadR':       {'HitboxMultiplier': [1.4, 1.32], 'HorizontalRangeNear': -0.949999988079071,    'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.7999999523162842, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 0.75, 'TrimmedBat': 0.0 }, 
+                'Boo':         {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.44999998807907104,  'HorizontalRangeFar': 0.8500000238418579,   'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.600000023841858, 'EasyBattingSpotHorizontal': -2.4000000953674316, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.100000023841858, 'TrimmedBat': 0.0 }, 
+                'Toadette':    {'HitboxMultiplier': [1.4, 1.32], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.5,                  'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.7000000476837158, 'EasyBattingSpotHorizontal': -1.7999999523162842, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 0.75, 'TrimmedBat': 0.0 }, 
+                'ShyGuyR':     {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.5, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'Birdo':       {'HitboxMultiplier': [1.18, 1.1], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': 0.10000000149011612, 'VerticalRangeBack': 1.7999999523162842, 'EasyBattingSpotHorizontal': -1.899999976158142, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'Monty':       {'HitboxMultiplier': [1.0, 0.92], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.8500000238418579,   'VerticalRangeFront': 0.30000001192092896, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.5, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'BowserJr':    {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': 0.20000000298023224, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.5, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'ParatroopaR': {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.600000023841858, 'EasyBattingSpotHorizontal': -2.200000047683716, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'PiantaB':     {'HitboxMultiplier': [1.2, 1.08], 'HorizontalRangeNear': -0.44999998807907104,  'HorizontalRangeFar': 0.8500000238418579,   'VerticalRangeFront': 0.5, 'VerticalRangeBack': 1.2999999523162842, 'EasyBattingSpotHorizontal': -2.299999952316284, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'PiantaR':     {'HitboxMultiplier': [1.2, 1.08], 'HorizontalRangeNear': -0.44999998807907104,  'HorizontalRangeFar': 0.8500000238418579,   'VerticalRangeFront': 0.5, 'VerticalRangeBack': 1.2999999523162842, 'EasyBattingSpotHorizontal': -2.299999952316284, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'PiantaY':     {'HitboxMultiplier': [1.2, 1.08], 'HorizontalRangeNear': -0.44999998807907104,  'HorizontalRangeFar': 0.8500000238418579,   'VerticalRangeFront': 0.5, 'VerticalRangeBack': 1.2999999523162842, 'EasyBattingSpotHorizontal': -2.299999952316284, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'NokiB':       {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': 0.10000000149011612, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.0, 'EasyBattingSpotVertical': -1.2000000476837158, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'NokiR':       {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': 0.10000000149011612, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.0, 'EasyBattingSpotVertical': -1.2000000476837158, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'NokiG':       {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': 0.10000000149011612, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.0, 'EasyBattingSpotVertical': -1.2000000476837158, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'BroH':        {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.2000000476837158, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 1.0 }, 
+                'Toadsworth':  {'HitboxMultiplier': [1.4, 1.32], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.600000023841858, 'EasyBattingSpotHorizontal': -1.75, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 0.75, 'TrimmedBat': 1.0 }, 
+                'ToadB':       {'HitboxMultiplier': [1.4, 1.32], 'HorizontalRangeNear': -0.44999998807907104,  'HorizontalRangeFar': 0.44999998807907104,  'VerticalRangeFront': -0.6000000238418579, 'VerticalRangeBack': 1.2000000476837158, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 0.75, 'TrimmedBat': 0.0 }, 
+                'ToadY':       {'HitboxMultiplier': [1.4, 1.32], 'HorizontalRangeNear': -0.44999998807907104,  'HorizontalRangeFar': 0.44999998807907104,  'VerticalRangeFront': -0.6000000238418579, 'VerticalRangeBack': 1.2000000476837158, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 0.75, 'TrimmedBat': 0.0 }, 
+                'ToadG':       {'HitboxMultiplier': [1.4, 1.32], 'HorizontalRangeNear': -0.44999998807907104,  'HorizontalRangeFar': 0.44999998807907104,  'VerticalRangeFront': -0.6000000238418579, 'VerticalRangeBack': 1.2000000476837158, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 0.75, 'TrimmedBat': 0.0 }, 
+                'ToadP':       {'HitboxMultiplier': [1.4, 1.32], 'HorizontalRangeNear': -0.44999998807907104,  'HorizontalRangeFar': 0.44999998807907104,  'VerticalRangeFront': -0.6000000238418579, 'VerticalRangeBack': 1.2000000476837158, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 0.75, 'TrimmedBat': 0.0 }, 
+                'MagikoopaB':  {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6000000238418579,   'HorizontalRangeFar': 0.699999988079071,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.0, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'MagikoopaR':  {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6000000238418579,   'HorizontalRangeFar': 0.699999988079071,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.0, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'MagikoopaG':  {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6000000238418579,   'HorizontalRangeFar': 0.699999988079071,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.0, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'MagikoopaY':  {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6000000238418579,   'HorizontalRangeFar': 0.699999988079071,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.0, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'KingBoo':     {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.7999999523162842, 'EasyBattingSpotHorizontal': -2.299999952316284, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.2000000476837158, 'TrimmedBat': 0.0 }, 
+                'Petey':       {'HitboxMultiplier': [1.1, 0.7], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.2000000476837158, 'EasyBattingSpotHorizontal': -1.899999976158142, 'EasyBattingSpotVertical': -1.399999976158142, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.100000023841858, 'TrimmedBat': 0.0 }, 
+                'Dixie':       {'HitboxMultiplier': [1.18, 1.15], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': 0.20000000298023224, 'VerticalRangeBack': 1.7000000476837158, 'EasyBattingSpotHorizontal': -1.600000023841858, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.2000000476837158, 'TrimmedBat': 0.0 }, 
+                'Goomba':      {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': 0.0, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.0999999046325684, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 0.75, 'TrimmedBat': 0.0 }, 
+                'Paragoomba':  {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.299999952316284, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'KoopaG':      {'HitboxMultiplier': [1.18, 1.1], 'HorizontalRangeNear': -0.5,                  'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.600000023841858, 'EasyBattingSpotHorizontal': -2.1500000953674316, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'ParatroopaG': {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.600000023841858, 'EasyBattingSpotHorizontal': -2.0999999046325684, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'ShyGuyB':     {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.5, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'ShyGuyY':     {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.5, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'ShyGuyG':     {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.5, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'ShyGuyBk':    {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.550000011920929,    'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.399999976158142, 'EasyBattingSpotHorizontal': -2.5, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'DryBonesGy':  {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.75,                 'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.2999999523162842, 'EasyBattingSpotHorizontal': -1.899999976158142, 'EasyBattingSpotVertical': -1.100000023841858, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'DryBonesG':   {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.75,                 'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.2999999523162842, 'EasyBattingSpotHorizontal': -1.899999976158142, 'EasyBattingSpotVertical': -1.100000023841858, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'DryBonesR':   {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.75,                 'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.2999999523162842, 'EasyBattingSpotHorizontal': -1.899999976158142, 'EasyBattingSpotVertical': -1.100000023841858, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'DryBonesB':   {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.75,                 'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.10000000149011612, 'VerticalRangeBack': 1.2999999523162842, 'EasyBattingSpotHorizontal': -1.899999976158142, 'EasyBattingSpotVertical': -1.100000023841858, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
+                'BroF':        {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.2000000476837158, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 1.0 }, 
+                'BroB':        {'HitboxMultiplier': [1.2, 1.12], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.6499999761581421,   'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.2000000476837158, 'EasyBattingSpotHorizontal': -1.7000000476837158, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 1.0 }
+ }
 
 # pitchAttributes = {
 #     "curveball_charge": {
@@ -121,8 +184,13 @@ class Velocity():
         self.Y += acceleration.Y
         self.Z += acceleration.Z
 
+    def update_mult(self, acceleration):
+        self.X *= (1 + acceleration.X)
+        self.Y *= (1 + acceleration.Y)
+        self.Z *= (1 + acceleration.Z)
+
     def prnt(self):
-        print("(" + str(self.X) + ", " + str(self.Y) + ", " + str(self.Z) + ")")
+        print("<" + str(self.X) + ", " + str(self.Y) + ", " + str(self.Z) + ">")
 
 class Acceleration():
     def __init__(self, X: float, Y: float, Z: float):
@@ -191,6 +259,15 @@ class Pitch():
         def returnPitchSpeed(char: str, type: str):
             return initializer.getCharacterStat(char, type + "_ball_speed")
         
+        def returnAirResistanceStartingY(type:str):
+            return (18.44* (100 - pitchAirResistance[type]['delay'])/100)
+        
+        def returnAirResistanceVelocityAdjustment(type:str):
+            return (0.001 * pitchAirResistance[type]['velocityAdjustment'])
+        
+        def returnBatPositionZ(char: str):
+            return batterHitbox[char]['PitchingHeight'] * batterHitbox[char]['HitboxMultiplier'][0]
+
         def add(obj1, obj2):
             obj1.X += obj2.X
             obj1.Y += obj2.Y
@@ -207,21 +284,53 @@ class Pitch():
         self.baseReleasePosition = returnBasePosition(pitcher, 'curve')
         self.moundPositionDiff = Position(initializer.getMemoryAddressValue('pitcher_mound_position_x'), 0, 0)
         self.initialPosition = add(self.baseReleasePosition, self.moundPositionDiff)
+        self.position = self.initialPosition
 
-        # I personally don't like the XYZ structure. Swap Z for Y
+        batHeightZ = returnBatPositionZ(pitcher.pitcher)
+
+        # Changed Y for Z and vice versa
         frontOfPlateY = 0.5 * (1.05 + 0.5)
         initialVelocityY = returnPitchSpeed(pitcher.pitcher, 'curve')/-240
-        initialVelocityX = ((self.moundPositionDiff.X * initialVelocityY) / (self.initialPosition.Y - frontOfPlateY))
-        
+        initialVelocityX = (((self.baseReleasePosition.X - self.moundPositionDiff.X) * initialVelocityY) / (self.initialPosition.Y - frontOfPlateY))
         # Adjust for bat height self.initialPosition.Z - self.batHeight.Z
-        initialVelocityZ = ((self.initialPosition.Z * initialVelocityY) / (self.initialPosition.Y - frontOfPlateY))
+        initialVelocityZ = (((self.initialPosition.Z - batHeightZ) * initialVelocityY) / (self.initialPosition.Y - frontOfPlateY))
 
+        # Initial Velocity and Acceleration
         self.initialVelocity = Velocity(initialVelocityX, initialVelocityY, initialVelocityZ)
+        self.velocity = Velocity(initialVelocityX, initialVelocityY, initialVelocityZ)
         self.initialAcceleration = Acceleration(0, 0, 0)
 
         self.ball = Ball(self.initialPosition, self.initialVelocity, self.initialAcceleration)
         #self.mound = Mound(blah, blah, blah)
 
+        self.airResistanceStartingY = returnAirResistanceStartingY('curve')
+        self.airResistanceVelocityAdjustment = returnAirResistanceVelocityAdjustment('curve')
+        self.pitchIsControlable = False
+
+    def pitchTrajectory(self):
+
+        def isPitchControlable(self, position, pitchIsControlable):
+            if position.Y <= 18.44:
+                pitchIsControlable = True
+            else:
+                pitchIsControlable = False
+            return pitchIsControlable
+            
+        def isPitchAffectedByAirResistance(position, airResistanceStartingY):
+            if position.Y <= airResistanceStartingY:
+                return True
+            else:
+                return False
+        
+        if isPitchAffectedByAirResistance(self.position, self.airResistanceStartingY):
+            self.velocity.update_mult(Acceleration(-self.airResistanceVelocityAdjustment, -self.airResistanceVelocityAdjustment, 0))
+        
+        decelerationFactor = 0.998
+        self.velocity.Y *= decelerationFactor
+        self.velocity.X *= decelerationFactor
+        self.velocity.Z *= decelerationFactor
+
+        self.position.update(self.velocity)
         
 
 
@@ -233,8 +342,50 @@ def main():
     pitch = Pitch(pitcher, initializer)
 
     print(initializer.getMemoryAddressValue('pitcher_mound_position_x'))
+    print(pitcher.pitcher)
+    print()
     pitch.initialPosition.prnt()
     pitch.initialVelocity.prnt()
+    
+    
+    pitchX = []
+    pitchY = []
+    pitchZ = []
+
+
+    for frame in range(1, 54):
+        print(frame)
+        pitch.pitchTrajectory()
+        pitch.position.prnt()
+
+        pitchX.append(pitch.position.X)
+        pitchY.append(pitch.position.Y)
+        pitchZ.append(pitch.position.Z)
+
+        pitch.velocity.prnt()
+        print()
+
+    fig = plt.figure()
+    ax = Axes3D(fig, auto_add_to_figure = False)
+    fig.add_axes(ax)
+
+    x = [0.53, 0.53, 0.53, -0.53, -0.53]
+    y = [1.05, (1.05+0.5)/2, 0.5, 1.05, 0.5]
+    z = [0.1, 0.1, 0.1, 0.1, 0.1]
+    #strikeZone = [[-0.53, 1.05, 0], [-0.53, 0.5, 0], [0.53, 1.05, 0], [0.53, 0.5, 0]]
+    strikeZone = [list(zip(x,y,z))]
+
+    ax.add_collection3d(Poly3DCollection(strikeZone))
+    ax.scatter(pitchX, pitchY, pitchZ)
+    #ax.add_patch(strikeZone)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    plt.title(str(pitcher.pitcher) + ': ' + 'Offset = ' + str(initializer.getMemoryAddressValue('pitcher_mound_position_x')))
+    plt.show()
+
+
+    
 
     # print(info.getMemoryAddressValue('pitcher_id'))
     #print(pitchBaseReleaseCoordinates['Mario']['curve'])
