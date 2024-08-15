@@ -6,23 +6,23 @@ import math
 
 
 def linearInterpolateToNewRange(value, prevMin, prevMax, nextMin, nextMax):
-    min = 0.0
-    max = 0.0
-    calcValue = 0.0
+  min = 0.0
+  max = 0.0
+  calcValue = 0.0
 
-    # adjusts previous range to return a range that reflects new inputs
-    if (min == (prevMax - prevMin)):
-        max = 1.0
-    else:
-        max = 1.0
-        calcValue = (value - prevMin) / (prevMax - prevMin)
+  # adjusts previous range to return a range that reflects new inputs
+  if (min == (prevMax - prevMin)):
+      max = 1.0
+  else:
+      max = 1.0
+      calcValue = (value - prevMin) / (prevMax - prevMin)
 
-        if calcValue <= max:
-            max = calcValue
-            if (calcValue < min):
-                max = min
-    # returns adjusted max
-    return (((nextMax - nextMin) * max) + nextMin)
+      if calcValue <= max:
+          max = calcValue
+          if (calcValue < min):
+              max = min
+  # returns adjusted max
+  return (((nextMax - nextMin) * max) + nextMin)
 
 
 def randBetween(param_1, param_2, StaticRandomInt1, StaticRandomInt2, TotalframesAtPlay):

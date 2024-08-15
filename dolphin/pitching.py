@@ -2,6 +2,7 @@ from memorylib import Dolphin
 from addresses import initializeMemoryAddresses
 from characters import initializeCharacters
 import memory_values
+from helper_functions import linearInterpolateToNewRange
 #from pitching_calculations import pitchBaseReleaseCoordinates
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
@@ -69,7 +70,7 @@ pitchBaseReleaseCoordinates = {
     'BroB':        {'curve': {'X': 0.276068062,     'Z': 3.39618778,    'Y': 19.1116161},       'charge': {'X': -0.770916998,   'Z': 2.54096055,    'Y': 18.5399666}},
 }
 
-pitchAirResistance = {'curve': {'velocityAdjustment': 15, 'delay': 20}}
+pitchProperties = {'curve': {'minCurve': 25, 'maxCurve': 50, 'velocityAdjustment': 15, 'delay': 20}}
 
 batterHitbox = {
                 'Mario':       {'HitboxMultiplier': [1.18, 1.1], 'HorizontalRangeNear': -0.6499999761581421,   'HorizontalRangeFar': 0.550000011920929,    'VerticalRangeFront': -0.20000000298023224, 'VerticalRangeBack': 1.5, 'EasyBattingSpotHorizontal': -2.0999999046325684, 'EasyBattingSpotVertical': -1.0, 'BoxMoveSpeed': 0.05000000074505806, 'PitchingHeight': 1.0, 'TrimmedBat': 0.0 }, 
@@ -240,8 +241,15 @@ class Pitcher():
         self.pitcher = str(memory_values.CharacterID(self.pitcher_id).name)
         self.pitcherHand = initializer.getMemoryAddressValue('pitcher_hand')
         initializer.updateCharacterStat(self.pitcher, 'fielding_arm', self.pitcherHand)
+        self.curve = initializer.getCharacterStat(self.pitcher, 'curve')
+        self.curve_control = initializer.getCharacterStat(self.pitcher, 'curve_control')
+        self.curve_ball_speed = initializer.getCharacterStat(self.pitcher, 'curve_ball_speed')
+        self.fast_ball_speed = initializer.getCharacterStat(self.pitcher, 'fast_ball_speed')
         self.pitcherStats = initializer.getCharacterAllStats(self.pitcher)
 
+class Curve():
+    def __init__(self, input):
+        self.input = input
 
 
 class Pitch():
@@ -260,10 +268,20 @@ class Pitch():
             return initializer.getCharacterStat(char, type + "_ball_speed")
         
         def returnAirResistanceStartingY(type:str):
-            return (18.44* (100 - pitchAirResistance[type]['delay'])/100)
+            return (18.44* (100 - pitchProperties[type]['delay'])/100)
         
         def returnAirResistanceVelocityAdjustment(type:str):
-            return (0.001 * pitchAirResistance[type]['velocityAdjustment'])
+            return (0.001 * pitchProperties[type]['velocityAdjustment'])
+        
+        def returnCurveInterpolation(type:str):
+            return 0.00005* linearInterpolateToNewRange(pitcher.curve, 1, 100, pitchProperties[type]['minCurve'], pitchProperties[type]['maxCurve'])
+        
+        def returnCurveControl(type:str):
+            framesUntilFullControl = linearInterpolateToNewRange(pitcher.curve_control, 1, 100, 8, 2)
+            if framesUntilFullControl < 1:
+                return 1
+            return framesUntilFullControl
+        
         
         def returnBatPositionZ(char: str):
             return batterHitbox[char]['PitchingHeight'] * batterHitbox[char]['HitboxMultiplier'][0]
@@ -275,9 +293,9 @@ class Pitch():
             return obj1
         
         def subtract(obj1, obj2):
-            obj1.X += obj2.X
-            obj1.Y += obj2.Y
-            obj1.Z += obj2.Z
+            obj1.X -= obj2.X
+            obj1.Y -= obj2.Y
+            obj1.Z -= obj2.Z
             return obj1
 
         # Establish release position
@@ -286,14 +304,14 @@ class Pitch():
         self.initialPosition = add(self.baseReleasePosition, self.moundPositionDiff)
         self.position = self.initialPosition
 
-        batHeightZ = returnBatPositionZ(pitcher.pitcher)
+        self.batHeightZ = returnBatPositionZ(pitcher.pitcher)
 
         # Changed Y for Z and vice versa
         frontOfPlateY = 0.5 * (1.05 + 0.5)
         initialVelocityY = returnPitchSpeed(pitcher.pitcher, 'curve')/-240
         initialVelocityX = (((self.baseReleasePosition.X - self.moundPositionDiff.X) * initialVelocityY) / (self.initialPosition.Y - frontOfPlateY))
         # Adjust for bat height self.initialPosition.Z - self.batHeight.Z
-        initialVelocityZ = (((self.initialPosition.Z - batHeightZ) * initialVelocityY) / (self.initialPosition.Y - frontOfPlateY))
+        initialVelocityZ = (((self.initialPosition.Z - self.batHeightZ) * initialVelocityY) / (self.initialPosition.Y - frontOfPlateY))
 
         # Initial Velocity and Acceleration
         self.initialVelocity = Velocity(initialVelocityX, initialVelocityY, initialVelocityZ)
@@ -305,22 +323,70 @@ class Pitch():
 
         self.airResistanceStartingY = returnAirResistanceStartingY('curve')
         self.airResistanceVelocityAdjustment = returnAirResistanceVelocityAdjustment('curve')
-        self.pitchIsControlable = False
+        self.pitchIsControlableFrames = -1
 
-    def pitchTrajectory(self):
+        self.curveInterpolation = returnCurveInterpolation('curve')
+        self.curveControl = returnCurveControl('curve')
+        self.currCurveControl = 0
+        self.curveControlInterpolation = self.curveInterpolation/self.curveControl
 
-        def isPitchControlable(self, position, pitchIsControlable):
+        self.prevInput = 0
+        self.prevCurveCalc = Velocity(0,0,0)
+        self.currCurveCalc = Velocity(0,0,0)
+
+
+    def pitchTrajectory(self, inputs):
+
+        def add(obj1, obj2):
+            obj1.X += obj2.X
+            obj1.Y += obj2.Y
+            obj1.Z += obj2.Z
+            return obj1
+        
+        def subtract(obj1, obj2):
+            obj1.X -= obj2.X
+            obj1.Y -= obj2.Y
+            obj1.Z -= obj2.Z
+            return obj1
+
+
+        def isPitchControlable(position):
             if position.Y <= 18.44:
-                pitchIsControlable = True
+                return True
             else:
-                pitchIsControlable = False
-            return pitchIsControlable
+                return False
             
         def isPitchAffectedByAirResistance(position, airResistanceStartingY):
             if position.Y <= airResistanceStartingY:
                 return True
             else:
                 return False
+            
+        def returnCurveVelocity(input):
+            self.prevInput = input
+            self.prevCurveCalc = self.currCurveCalc
+            self.currCurveCalc = Velocity(0,0,0)
+            if (input == 0):
+                if (self.prevCurveCalc.X >= 0):
+                    self.currCurveCalc = Velocity(self.prevCurveCalc.X - self.curveControlInterpolation, 0, 0)
+                    if (self.currCurveCalc.X < 0):
+                        self.currCurveCalc.X = 0
+                else:
+                    self.currCurveCalc = Velocity(self.prevCurveCalc.X + self.curveControlInterpolation, 0, 0)
+                    if (self.currCurveCalc.X > 0):
+                        self.currCurveCalc.X = 0
+            else:
+                self.currCurveCalc = Velocity(self.prevCurveCalc.X + (input * self.curveControlInterpolation), 0, 0)
+            
+            if self.currCurveCalc.X < -self.curveInterpolation:
+                self.currCurveCalc.X = -self.curveInterpolation
+                
+            if self.currCurveCalc.X > self.curveInterpolation:
+                self.currCurveCalc.X = self.curveInterpolation
+
+            return self.currCurveCalc
+            
+
         
         if isPitchAffectedByAirResistance(self.position, self.airResistanceStartingY):
             self.velocity.update_mult(Acceleration(-self.airResistanceVelocityAdjustment, -self.airResistanceVelocityAdjustment, 0))
@@ -330,7 +396,15 @@ class Pitch():
         self.velocity.X *= decelerationFactor
         self.velocity.Z *= decelerationFactor
 
+        if isPitchControlable(self.position):
+            self.pitchIsControlableFrames += 1
+            try:
+                add(self.velocity, returnCurveVelocity(inputs[self.pitchIsControlableFrames]))
+            except:
+                add(self.velocity, returnCurveVelocity(0))
+
         self.position.update(self.velocity)
+
         
 
 
@@ -352,10 +426,11 @@ def main():
     pitchY = []
     pitchZ = []
 
+    inputs = [1,1,1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 
     for frame in range(1, 54):
         print(frame)
-        pitch.pitchTrajectory()
+        pitch.pitchTrajectory(inputs)
         pitch.position.prnt()
 
         pitchX.append(pitch.position.X)
@@ -368,16 +443,19 @@ def main():
     fig = plt.figure()
     ax = Axes3D(fig, auto_add_to_figure = False)
     fig.add_axes(ax)
-
+    batHeight = pitch.batHeightZ
     x = [0.53, 0.53, 0.53, -0.53, -0.53]
     y = [1.05, (1.05+0.5)/2, 0.5, 1.05, 0.5]
-    z = [0.1, 0.1, 0.1, 0.1, 0.1]
+    z = [0,0,0,0,0]#[batHeight, batHeight, batHeight, batHeight, batHeight]
     #strikeZone = [[-0.53, 1.05, 0], [-0.53, 0.5, 0], [0.53, 1.05, 0], [0.53, 0.5, 0]]
     strikeZone = [list(zip(x,y,z))]
 
     ax.add_collection3d(Poly3DCollection(strikeZone))
     ax.scatter(pitchX, pitchY, pitchZ)
     #ax.add_patch(strikeZone)
+    ax.set_xlim([-2, 2])
+    ax.set_ylim([0, 20])
+    ax.set_zlim([0, 5])
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
