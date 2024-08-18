@@ -34,4 +34,14 @@ Hitter
 0x80890914 - 4 (float) - Batter position Y
 
 
+Maybe these 2 are the ones to overwrite
+0x80890e50   8 inMemBall.velocity.X?? Global
+0x80890e54   8 inMemBall.velocity.Y 	Global
+0x80890e58   8 inMemBall.velocity.Z 	Global
+
+ball_position_x	0x808909c0	float
+ball_position_y	0x808909c4	float
+ball_position_z	0x808909c8	float
+
+
 

@@ -134,10 +134,10 @@ def main():
 
     memoryAddresses["desired_mound_position_x"].write(0.2)
 
-    # example for reading p1 stick & trigger inputs
+    # example for reading p1 stick & trigger inputs and ball position y
     for i in range(50):
         print(memoryAddresses["p1_stick_trigger_input"].read())
-
+        print(str(memoryAddresses["ball_position_y"].read()))
 
 
 if __name__ == '__main__':
