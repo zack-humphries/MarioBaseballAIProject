@@ -241,15 +241,17 @@ class Pitcher():
 class Pitch():
 
     def __init__(self, initializer: Initializer, pitcher: Pitcher, type:str, chargeUp = 0):
-
+        self.initializer = initializer
         self.pitcher = pitcher
         self.pitchType = pitchTypes[type]
+        self.pitchTypeName = type
         self.minCurve = pitchProperties[self.pitchType['pitchProperty']]['minCurve']
         self.maxCurve = pitchProperties[self.pitchType['pitchProperty']]['maxCurve']
         self.delay = pitchProperties[self.pitchType['pitchProperty']]['delay']
         self.velocityAdjustment = pitchProperties[self.pitchType['pitchProperty']]['velocityAdjustment']
         self.pitchBaseReleaseCoordinates = pitchBaseReleaseCoordinates[pitcher.pitcher][self.pitchType['pitchBaseReleaseCoordinates']]
         self.curve = pitcher.curve
+        self.curveValue = None
 
         def returnBasePosition(pitcher: Pitcher):
             tempbase = self.pitchBaseReleaseCoordinates
@@ -381,6 +383,8 @@ class Pitch():
             elif self.currCurveCalc.X > self.curveInterpolation:
                 self.currCurveCalc.X = self.curveInterpolation
 
+            self.curveValue = self.currCurveCalc.X
+            print(self.curveValue)
             return self.currCurveCalc
         
 
@@ -401,7 +405,7 @@ class Pitch():
 
 class PitchTrajectory():
 
-    def __init__(self, pitch: Pitch, inputs):
+    def __init__(self, pitch: Pitch, inputs = []):
         self.pitch = pitch
         self.inputs = inputs
         self.inputFrames = len(inputs)
@@ -413,6 +417,23 @@ class PitchTrajectory():
         self.velocityX = [pitch.velocity.X]
         self.velocityY = [pitch.velocity.Y]
         self.velocityZ = [pitch.velocity.Z]
+
+    def applyChanges(self, value):
+        self.pitch.initializer.updateMemoryAddressValue('dummy_address0', value)
+
+    def calculateNextFrame(self, input):
+        try:
+            self.inputs.extend(input)
+        except:
+            self.inputs.append(input)
+        self.pitch.pitchTrajectory(input)
+
+        self.positionX.append(self.pitch.position.X)
+        self.positionY.append(self.pitch.position.Y)
+        self.positionZ.append(self.pitch.position.Z)
+
+        self.applyChanges(self.pitch.curveValue)
+
 
     def returnPitchCoordinates(self):
         def isPitchNotControlable(positionY):
@@ -434,13 +455,9 @@ class PitchTrajectory():
                 self.actualInputs.append(self.inputs[userInputCount])
                 userInputCount += 1
 
-            self.pitch.pitchTrajectory(self.actualInputs[actualInputCount])
+            self.calculateNextFrame(self.actualInputs[actualInputCount])
             actualInputCount += 1
                 
-            self.positionX.append(self.pitch.position.X)
-            self.positionY.append(self.pitch.position.Y)
-            self.positionZ.append(self.pitch.position.Z)
-
         self.pitchFrames = len(self.positionX)
             
         
@@ -448,7 +465,7 @@ class PitchTrajectory():
         fig = plt.figure()
         ax = Axes3D(fig, auto_add_to_figure = False)
         ax.set_title(str(self.pitch.pitcher.pitcher) + " (" + self.pitch.pitcher.returnPitcherHand() + \
-                      " Handed): \n10 Input Frames Right & 20 input Frames Left")
+                      " Handed): " + self.pitch.pitchTypeName +" \n10 Input Frames Right & 20 input Frames Left")
         fig.add_axes(ax)
         batHeight = self.pitch.batHeightZ
 
