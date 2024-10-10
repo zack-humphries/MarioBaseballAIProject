@@ -13,15 +13,23 @@ def isNoneOrEmpty(var):
         return True
     return False
 
+class DolphinAddress():
+    def __init__(self):   
+        self.dolphin = dolphin
+        dolphin.hook()
+        self.dolphinPID = dolphin.pid
+
+
 
 class MemoryAddress():  
-    def __init__(self, name, address, type: str, classtype = None, notes = None):
-        if type not in ['int6', 'uint8', 'float', 'int16', 'uint16', 'int32', 'uint32']:
+    def __init__(self, dolphinAddress: DolphinAddress, name, address, type: str, classtype = None, notes = None):
+        if type not in ['int6', 'uint8', 'float', 'int16', 'uint16', 'int32', 'uint32', 'short', 'emun']:
             AssertionError
 
         self.name = name
         self.address = address
         self.type = type
+        self.pid = dolphinAddress.dolphinPID
 
         # assert classtype if member of enum class in memory_values.py
         if isNoneOrEmpty(classtype):
@@ -34,14 +42,16 @@ class MemoryAddress():
     # reads specific memory address on given frame
     def read(self):
         if dolphin.hook():
-            return dolphin.read(self.address, self.type)
+            if dolphin.pid == self.pid:
+                return dolphin.read(self.address, self.type)
         else:
             return Exception
         
     # overwrites value onto address on given frame
     def write(self, value):
         if dolphin.hook():
-            return dolphin.write(self.address, self.type, value)
+            if dolphin.pid == self.pid:
+                return dolphin.write(self.address, self.type, value)
         else:
             return Exception
 
@@ -76,7 +86,7 @@ def convertValueTypeString(str):
         return eval(str)
 
 # modify "addresses.csv" to add any addresses you want
-def appendMemoryAddresses(csvreader):
+def appendMemoryAddresses(csvreader, dolphinAddress: DolphinAddress):
 
     memoryAddresses = {}
 
@@ -93,7 +103,7 @@ def appendMemoryAddresses(csvreader):
                 return memoryAddresses
             pass
         else:
-            tempMemoryAddress = MemoryAddress(data[0], int(data[1], 16), data[2], data[3], data[4])
+            tempMemoryAddress = MemoryAddress(dolphinAddress, data[0], int(data[1], 16), data[2], data[3], data[4])
             memoryAddresses[data[0]] = tempMemoryAddress
             try:
                 data = list(next(csvreader))
@@ -106,6 +116,7 @@ def appendMemoryAddresses(csvreader):
 
 def initializeMemoryAddresses():
 
+    dolphinAddress = DolphinAddress()
 
     # return current filepath (which should contain addresses.csv)
     filepath = returnFilePath("addresses.csv")
@@ -114,7 +125,7 @@ def initializeMemoryAddresses():
 
         csvreader = csv.reader(csvfile)
 
-        all_addresses = appendMemoryAddresses(csvreader)
+        all_addresses = appendMemoryAddresses(csvreader, dolphinAddress)
 
     return all_addresses
  

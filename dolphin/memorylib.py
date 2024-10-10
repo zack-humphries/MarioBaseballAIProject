@@ -17,6 +17,7 @@ https://forgejo.sup39.dev/sms/sup-dolphin-memory-lib
 '''
 
 import os
+import psutil
 from psutil import process_iter
 from struct import pack, unpack, calcsize
 from multiprocessing.shared_memory import SharedMemory
@@ -199,6 +200,8 @@ class Dolphin():
   def read_int16(self, addr): return self.read_struct(addr, '>h')[0]
   def read_int8(self, addr): return self.read_struct(addr, '>b')[0]
   def read_float(self, addr): return self.read_struct(addr, '>f')[0]
+  def read_short(self, addr): return self.read_struct(addr, '>h')[0]
+  def read_enum(self, addr): return int.from_bytes(self.read_bytes(addr), 'big')
 
 
   def read(self, addr, type: str):
@@ -216,6 +219,10 @@ class Dolphin():
       return self.read_struct(addr, '>i')[0]
     elif type == 'uint32':
       return self.read_struct(addr, '>I')[0]
+    elif type == 'short':
+      return self.read_struct(addr, '>h')[0]
+    elif type == 'enum':
+      return int.from_bytes(self.read_bytes(addr), 'big')
     return AttributeError
 
   ## write single value to memory
@@ -234,6 +241,8 @@ class Dolphin():
   def write_int16(self, addr, val): return self.write_struct(addr, '>h', val)
   def write_int8(self, addr, val): return self.write_struct(addr, '>b', val)
   def write_float(self, addr, val): return self.write_struct(addr, '>f', val)
+  def write_short(self, addr, val): return self.write_struct(addr, '>h', val)
+  def write_int64(self, addr, val): return self.write_struct(addr, '>q', val)
 
   def write(self, addr, type: str, val):
     if type == 'int8':
@@ -250,6 +259,10 @@ class Dolphin():
       return self.write_struct(addr, '>i', val)
     elif type == 'uint32':
       return self.write_struct(addr, '>I', val)
+    elif type == 'short':
+      return self.write_struct(addr, '>h', val)
+    elif type == 'int64':
+      return self.write_struct(addr, '>q', val)
     return AttributeError
 
 
@@ -260,14 +273,130 @@ class Dolphin():
   find_dolphin = find_dolphin
 
 
+
+def test(dolphin):
+  var = 0
+  framesInAir = -1
+  flag = 0
+  while True:
+    
+    # Pitch Type
+    dolphin.write(0x80890b1e, "int16", 0)
+    # Pitch Type 2
+    dolphin.write(0x80890b20, 'int16', 0)
+
+    curveSpeed = dolphin.read(0x80890b02, 'int16')
+    dolphin.write(0x80890b0a, 'int16', curveSpeed)
+
+    # pitcher X
+    dolphin.write(0x80890a4c, 'float', 0)
+
+    
+    state = int.from_bytes(dolphin.read_bytes(0x80890afe), 'big')
+
+    if state == 3:
+
+      actualInAirFrame = dolphin.read(0x80890ae0, 'short')
+      
+      if framesInAir < actualInAirFrame:
+        var += 0.05
+        framesInAir += 1
+        print(var)
+
+    elif state == 4:
+
+      framesInAir = -1
+      var = 0
+
+
+
+    # actualFrames = dolphin.read(0x80890af2, 'short')
+    # if flag == 0 and actualFrames != 0:
+    #   framesUntilBallReachesBatterZ = actualFrames
+    #   flag = 1
+    # elif flag == 1 and actualFrames == 0 and framesUntilBallReachesBatterZ != 0:
+    #   flag = 0
+    #   framesUntilBallReachesBatterZ = 0
+    #   var = 0
+
+    # if 0 < actualFrames < framesUntilBallReachesBatterZ:
+    #   var += 0.05
+    #   framesUntilBallReachesBatterZ -= 1
+    #   print(var)
+
+    # pitch Curr X
+    dolphin.write(0x808909c0, 'float', var)
+
+
+def pitchState(dolphin: Dolphin):
+  flag = 0
+  currentStateFrameCounter = -1
+  while True:
+    actualFrame = dolphin.read(0x80890ae0, 'short')
+    if currentStateFrameCounter != actualFrame:
+      state = int.from_bytes(dolphin.read_bytes(0x80890afe), 'big')
+      currentStateFrameCounter = actualFrame
+      print(f'{state}: {currentStateFrameCounter}')
+
 def main():
   dolphin = Dolphin()
 
-  while True:
-    if dolphin.hook():
-      print(str(dolphin.read_int8(0x803c77b8)) + "   " + str(dolphin.read_int8(0x803c77b9)))
-    else:
-      break
+  if dolphin.hook():
+    print(dolphin.memory)
+    print(dolphin.pid)
+
+
+    while True:
+      print(dolphin.read(0x80890910, "float"))
+
+    #pitchState(dolphin)
+
+    #test(dolphin)
+    # count = 0
+
+    # left = 998309887
+    # straight = 998244352
+    # right = 998244353
+
+    # input = 0
+
+    # while True:
+    #   state = int.from_bytes(dolphin.read_bytes(0x80890afe), 'big')
+
+    #   if state == 3:
+    #   # dolphin.write(0x80002348, 'int32', 998244352)
+
+    #     actualInAirFrame = dolphin.read(0x80890ae0, 'short')
+
+    #     if actualInAirFrame <= 18:
+    #       input = straight
+    #     elif actualInAirFrame <= 30:
+    #       input = left
+    #     else:
+    #       input = right
+
+    #     dolphin.write(0x80002348, 'int32', input)
+
+    #     if count != actualInAirFrame:
+    #       count = actualInAirFrame
+    #       print(f'{count} {input}')
+        
+
+      
+
+
+  # while True:
+  #   if dolphin.hook():
+  #     print('yay!')
+      #dolphin.write(0x8000234a, 'int16', 1)
+
+  # while True:
+  #   if dolphin.hook():
+  #     dolphin.write(0x80880000, 'int32', 1)
+  #     dolphin.read(0x80880000, 'int32')
+  #     # print(str(dolphin.read_int8(0x803c77b8)) + "   " + str(dolphin.read_int8(0x803c77b9)))
+  #   else:
+  #     break
 
 if __name__ == '__main__':
   main()
